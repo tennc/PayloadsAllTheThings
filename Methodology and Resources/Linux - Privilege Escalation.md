@@ -50,6 +50,19 @@
 
 ## Tools
 
+There are many scripts that you can execute on a linux machine which automatically enumerate sytem information, processes, and files to locate privilege escelation vectors.
+Here are a few:
+
+- [LinPEAS - Linux Privilege Escalation Awesome Script](https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS)
+
+    ```powershell
+    wget "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh" -O linpeas.sh
+    curl "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh" -o linpeas.sh
+    ./linpeas.sh -a #all checks - deeper system enumeration, but it takes longer to complete.
+    ./linpeas.sh -s #superfast & stealth - This will bypass some time consuming checks. In stealth mode Nothing will be written to the disk.
+    ./linpeas.sh -P #Password - Pass a password that will be used with sudo -l and bruteforcing other users
+    ```
+    
 - [LinuxSmartEnumeration - Linux enumeration tools for pentesting and CTFs](https://github.com/diego-treitos/linux-smart-enumeration)
 
     ```powershell
@@ -214,7 +227,7 @@ ssh-dss AAAA487rt384ufrgh432087fhy02nv84u7fg839247fg8743gf087b3849yb98304yb9v834
 
 ```
 echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> /etc/ssh/ssh_config
-echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> /etc/ssh/sshs_config
+echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> /etc/ssh/sshd_config
 /etc/init.d/ssh restart
 ```
 
@@ -731,7 +744,10 @@ Precompiled exploits can be found inside these repositories, run them at your ow
 * [bin-sploits - @offensive-security](https://github.com/offensive-security/exploitdb-bin-sploits/tree/master/bin-sploits)
 * [kernel-exploits - @lucyoa](https://github.com/lucyoa/kernel-exploits/)
 
-The following exploits are known to work well, search for another exploits using `searchsploit -w linux kernel centos`.
+The following exploits are known to work well, search for more exploits with `searchsploit -w linux kernel centos`.
+
+Another way to find a kernel exploit is to get the specific kernel version and linux distro of the machine by doing `uname -a`
+Copy the kernel version and distribution, and search for it in google or in https://www.exploit-db.com/.
 
 ### CVE-2016-5195 (DirtyCow)
 

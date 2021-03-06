@@ -5,6 +5,10 @@ PHP provides two ways to compare two variables:
 - Loose comparison using `== or !=` : both variables have "the same value".
 - Strict comparison using `=== or !==` : both variables have "the same type and the same value".
 
+PHP type juggling vulnerabilities arise when loose comparison (== or !=) is employed instead of strict comparison (=== or !==) in an area where the attacker can control one of the variables being compared. This vulnerability can result in the application returning an unintended answer to the true or false statement, and can lead to severe authorization and/or authentication bugs.
+
+> PHP8 won't try to cast string into numbers anymore, thanks to the Saner string to number comparisons RFC, meaning that collision with hashes starting with 0e and the likes are finally a thing of the past! The Consistent type errors for internal functions RFC will prevent things like `0 == strcmp($_GET['username'], $password)` bypasses, since strcmp won't return null and spit a warning any longer, but will throw a proper exception instead. 
+
 ## Type Juggling
 
 ### True statements
@@ -38,6 +42,40 @@ var_dump(sha1([])); # NULL
 var_dump(md5([]));  # NULL
 ```
 
+### Example vulnerable code
+
+```php
+function validate_cookie($cookie,$key){
+	$hash = hash_hmac('md5', $cookie['username'] . '|' . $cookie['$expiration'], $key);
+	if($cookie['hmac'] != $hash){ // loose comparison
+		return false;
+	... 
+```
+
+The $cookie variable is provided by the user. The $key variable is a secret and unknown to the user.
+
+If we can make the calculated hash string Zero-like, and provide "0" in the $cookie['hmac'], the check will pass.
+
+```
+"0e768261251903820937390661668547" == "0"
+```
+
+We have control over 3 elements in the cookie:
+- $username - username you are targetting, probably "admin"
+- $hmac - the provided hash, "0"
+- $expiration - a UNIX timestamp, must be in the future
+
+Increase the expiration timestamp enough times and we will eventually get a Zero-like calculated HMAC.
+
+```
+hash_hmac(admin|1424869663) -> "e716865d1953e310498068ee39922f49"
+hash_hmac(admin|1424869664) -> "8c9a492d316efb5e358ceefe3829bde4"
+hash_hmac(admin|1424869665) -> "9f7cdbe744fc2dae1202431c7c66334b"
+hash_hmac(admin|1424869666) -> "105c0abe89825a14c471d4f0c1cc20ab"
+...
+hash_hmac(admin|1835970773) -> "0e174892301580325162390102935332" // "0e174892301580325162390102935332" == "0"
+```
+
 ## Magic Hashes - Exploit
 
 If the hash computed starts with "0e" (or "0..0e") only followed by numbers, PHP will treat the hash as a float.
@@ -67,3 +105,4 @@ var_dump(sha1('aaO8zKZF') == sha1('aa3OFF9m'));
 
 * [Writing Exploits For Exotic Bug Classes: PHP Type Juggling By Tyler Borland](http://turbochaos.blogspot.com/2013/08/exploiting-exotic-bugs-php-type-juggling.html)
 * [Magic Hashes - WhieHatSec](https://www.whitehatsec.com/blog/magic-hashes/)
+* [PHP Magic Tricks: Type Juggling](https://owasp.org/www-pdf-archive/PHPMagicTricks-TypeJuggling.pdf)

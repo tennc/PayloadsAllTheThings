@@ -21,7 +21,7 @@ https://famous-website.tld/signup?redirectUrl=https://famous-website.tld/account
 After signing up you get redirected to your account, this redirection is specified by the `redirectUrl` parameter in the URL.   
 What happens if we change the `famous-website.tld/account` to `evil-website.tld`?
 
-```powerhshell
+```powershell
 https://famous-website.tld/signup?redirectUrl=https://evil-website.tld/account
 ```
 
@@ -113,6 +113,14 @@ Creating folder as their domain
 http://www.yoursite.com/http://www.theirsite.com/
 http://www.yoursite.com/folder/www.folder.com
 ```
+
+Using "?" characted, browser will translate it to "/?"
+
+```powershell
+http://www.yoursite.com?http://www.theirsite.com/
+http://www.yoursite.com?folder/www.folder.com
+```
+
 
 Host/Split Unicode Normalization
 ```powershell

